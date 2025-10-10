@@ -28,12 +28,12 @@ fn setup(mut commands: Commands) {
 
     commands.trigger(SpawnRailEvent {
         transform: Transform::from_xyz(-100.0, 150.0, 0.0),
-        spline: CubicBSpline::new([
-            Vec2::new(-500.0, -600.0),
+        bezier: CubicBezier::new([[
+            Vec2::new(-500.0, -300.0),
             Vec2::new(-100.0, 300.0),
             Vec2::new(100.0, -300.0),
             Vec2::new(500.0, 300.0),
-        ]),
+        ]]),
     });
 }
 

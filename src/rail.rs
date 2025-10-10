@@ -20,16 +20,22 @@ struct RailMaterials {
 #[derive(Event)]
 pub struct SpawnRailEvent {
     pub transform: Transform,
-    pub spline: CubicBSpline<Vec2>,
+    pub bezier: CubicBezier<Vec2>,
 }
 
 #[derive(Component)]
 pub struct Rail {
     pub curve: CubicCurve<Vec2>,
+    pub bezier: CubicBezier<Vec2>,
 }
 
 #[derive(Component)]
 struct RailHandle;
+
+#[derive(Component)]
+struct ControlPoint {
+    index: usize,
+}
 
 fn load_rail_materials(mut commands: Commands, mut materials: ResMut<Assets<ColorMaterial>>) {
     let rail_materials = RailMaterials {
@@ -50,7 +56,7 @@ fn spawn_rail(
         RenderAssetUsages::RENDER_WORLD | RenderAssetUsages::MAIN_WORLD,
     );
 
-    let curve = rail_spawn.spline.to_curve().unwrap();
+    let curve = rail_spawn.bezier.to_curve().unwrap();
     let vertices = curve
         .iter_positions(100)
         .map(|v| Vec3::new(v.x, v.y, 0.0))
@@ -65,12 +71,34 @@ fn spawn_rail(
 
     commands
         .spawn((
-            Rail { curve },
+            Rail {
+                curve,
+                bezier: rail_spawn.bezier.clone(),
+            },
             rail_spawn.transform,
             Mesh2d(handle),
             MeshMaterial2d(rail_materials.basic.clone()),
         ))
         .with_children(|parent| {
+            for (index, control_point) in rail_spawn.bezier.control_points[0].iter().enumerate() {
+                parent
+                    .spawn((
+                        Sprite {
+                            color: palettes::basic::PURPLE.into(),
+                            custom_size: Some(Vec2::splat(16.0)),
+                            ..Default::default()
+                        },
+                        Transform::from_xyz(control_point.x, control_point.y, 0.0),
+                        ControlPoint { index },
+                        Pickable::default(),
+                    ))
+                    .observe(color_change::<Pointer<Press>>(Color::srgb(1.0, 0.0, 1.0)))
+                    .observe(color_change::<Pointer<Over>>(Color::srgb(0.7, 0.0, 0.7)))
+                    .observe(color_change::<Pointer<Out>>(Color::srgb(0.5, 0.0, 0.5)))
+                    .observe(color_change::<Pointer<Release>>(Color::srgb(0.5, 0.0, 0.5)))
+                    .observe(drag_controll_point);
+            }
+
             parent
                 .spawn((
                     Sprite {
@@ -84,6 +112,7 @@ fn spawn_rail(
                 .observe(color_change::<Pointer<Press>>(Color::srgb(0.0, 1.0, 0.0)))
                 .observe(color_change::<Pointer<Over>>(Color::srgb(0.0, 0.7, 0.0)))
                 .observe(color_change::<Pointer<Out>>(Color::srgb(0.0, 0.5, 0.0)))
+                .observe(color_change::<Pointer<Release>>(Color::srgb(0.0, 0.5, 0.0)))
                 .observe(drag_rail);
         });
 }
@@ -106,5 +135,38 @@ fn drag_rail(
     if let Ok(child) = children.get(drag.entity) {
         let mut transform = transforms.get_mut(child.parent()).unwrap();
         transform.translation += Vec3::new(drag.delta.x, -drag.delta.y, 0.0);
+    }
+}
+
+fn drag_controll_point(
+    drag: On<Pointer<Drag>>,
+    mut transforms: Query<(&mut Transform, &ControlPoint)>,
+    children: Query<&ChildOf>,
+    mut rails: Query<(&mut Rail, &Mesh2d)>,
+    mut meshes: ResMut<Assets<Mesh>>,
+) {
+    if let Ok((mut transform, control_point)) = transforms.get_mut(drag.entity) {
+        transform.translation += Vec3::new(drag.delta.x, -drag.delta.y, 0.0);
+        let new_pos = transform.translation.xy();
+
+        let (mut rail, mesh_2d) = rails
+            .get_mut(children.get(drag.entity).unwrap().parent())
+            .unwrap();
+
+        rail.bezier.control_points[0][control_point.index] = new_pos;
+        rail.curve = rail.bezier.to_curve().unwrap();
+
+        let mesh = meshes.get_mut(mesh_2d.0.id()).unwrap();
+
+        let vertices = rail
+            .curve
+            .iter_positions(100)
+            .map(|v| Vec3::new(v.x, v.y, 0.0))
+            .collect::<Vec<_>>();
+
+        mesh.insert_attribute(
+            Mesh::ATTRIBUTE_POSITION,
+            vertices, // vec![[-100.0, 0.0, 0.0], [0.0, 100.0, 0.0], [100.0, 0.0, 0.0]],
+        );
     }
 }
