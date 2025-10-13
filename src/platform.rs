@@ -1,5 +1,7 @@
 use bevy::{color::palettes, prelude::*};
 
+use crate::drag_handle::DragHandle;
+
 pub struct PlatformPlugin;
 impl Plugin for PlatformPlugin {
     fn build(&self, app: &mut App) {
@@ -13,7 +15,7 @@ pub struct SpawnPlatform;
 #[derive(Component)]
 pub struct Platfrom;
 
-fn spawn_platform(spawn: On<SpawnPlatform>, mut commands: Commands) {
+fn spawn_platform(_spawn: On<SpawnPlatform>, mut commands: Commands) {
     commands.spawn((
         Sprite {
             color: palettes::basic::GRAY.into(),
@@ -21,5 +23,8 @@ fn spawn_platform(spawn: On<SpawnPlatform>, mut commands: Commands) {
             ..Default::default()
         },
         Platfrom,
+        DragHandle {
+            offset: Vec2::Y * 55.0,
+        },
     ));
 }

@@ -2,6 +2,8 @@ use std::fmt::Debug;
 
 use bevy::{asset::RenderAssetUsages, color::palettes, mesh::PrimitiveTopology, prelude::*};
 
+use crate::drag_handle::DragHandle;
+
 pub struct RailPlugin;
 
 impl Plugin for RailPlugin {
@@ -28,9 +30,6 @@ pub struct Rail {
     pub curve: CubicCurve<Vec2>,
     pub bezier: CubicBezier<Vec2>,
 }
-
-#[derive(Component)]
-struct RailHandle;
 
 #[derive(Component)]
 struct ControlPoint {
@@ -78,6 +77,7 @@ fn spawn_rail(
             rail_spawn.transform,
             Mesh2d(handle),
             MeshMaterial2d(rail_materials.basic.clone()),
+            DragHandle::default(),
         ))
         .with_children(|parent| {
             for (index, control_point) in rail_spawn.bezier.control_points[0].iter().enumerate() {
@@ -98,22 +98,6 @@ fn spawn_rail(
                     .observe(color_change::<Pointer<Release>>(Color::srgb(0.5, 0.0, 0.5)))
                     .observe(drag_controll_point);
             }
-
-            parent
-                .spawn((
-                    Sprite {
-                        color: palettes::basic::GREEN.into(),
-                        custom_size: Some(Vec2::splat(16.0)),
-                        ..Default::default()
-                    },
-                    RailHandle,
-                    Pickable::default(),
-                ))
-                .observe(color_change::<Pointer<Press>>(Color::srgb(0.0, 1.0, 0.0)))
-                .observe(color_change::<Pointer<Over>>(Color::srgb(0.0, 0.7, 0.0)))
-                .observe(color_change::<Pointer<Out>>(Color::srgb(0.0, 0.5, 0.0)))
-                .observe(color_change::<Pointer<Release>>(Color::srgb(0.0, 0.5, 0.0)))
-                .observe(drag_rail);
         });
 }
 
@@ -124,17 +108,6 @@ fn color_change<E: EntityEvent + Debug + Clone + Reflect>(
         if let Ok(mut sprite) = sprites.get_mut(event.event_target()) {
             sprite.color = color;
         }
-    }
-}
-
-fn drag_rail(
-    drag: On<Pointer<Drag>>,
-    mut transforms: Query<&mut Transform>,
-    children: Query<&ChildOf>,
-) {
-    if let Ok(child) = children.get(drag.entity) {
-        let mut transform = transforms.get_mut(child.parent()).unwrap();
-        transform.translation += Vec3::new(drag.delta.x, -drag.delta.y, 0.0);
     }
 }
 

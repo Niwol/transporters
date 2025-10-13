@@ -2,11 +2,13 @@ use bevy::prelude::*;
 
 use crate::{
     agent::{AgentPlugin, SpawnAgentEvent},
+    drag_handle::DragHandlePlugin,
     platform::{PlatformPlugin, SpawnPlatform},
     rail::{Rail, RailPlugin, SpawnRailEvent},
 };
 
 mod agent;
+mod drag_handle;
 mod platform;
 mod rail;
 
@@ -15,7 +17,7 @@ pub struct TransporterGamePlugin;
 impl Plugin for TransporterGamePlugin {
     fn build(&self, app: &mut App) {
         app.add_plugins(DefaultPlugins);
-        app.add_plugins((RailPlugin, AgentPlugin, PlatformPlugin));
+        app.add_plugins((RailPlugin, AgentPlugin, PlatformPlugin, DragHandlePlugin));
 
         app.add_systems(Startup, setup);
         app.add_systems(
