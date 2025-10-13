@@ -2,17 +2,20 @@ use bevy::prelude::*;
 
 use crate::{
     agent::{AgentPlugin, SpawnAgentEvent},
+    platform::{PlatformPlugin, SpawnPlatform},
     rail::{Rail, RailPlugin, SpawnRailEvent},
 };
 
 mod agent;
+mod platform;
 mod rail;
+
 pub struct TransporterGamePlugin;
 
 impl Plugin for TransporterGamePlugin {
     fn build(&self, app: &mut App) {
         app.add_plugins(DefaultPlugins);
-        app.add_plugins((RailPlugin, AgentPlugin));
+        app.add_plugins((RailPlugin, AgentPlugin, PlatformPlugin));
 
         app.add_systems(Startup, setup);
         app.add_systems(
@@ -25,6 +28,7 @@ impl Plugin for TransporterGamePlugin {
 
 fn setup(mut commands: Commands) {
     commands.spawn(Camera2d);
+    commands.insert_resource(ClearColor(Color::srgb(0.8, 0.8, 0.8)));
 
     commands.trigger(SpawnRailEvent {
         transform: Transform::from_xyz(-100.0, 150.0, 0.0),
@@ -35,6 +39,8 @@ fn setup(mut commands: Commands) {
             Vec2::new(500.0, 300.0),
         ]]),
     });
+
+    commands.trigger(SpawnPlatform);
 }
 
 fn spawn_agent(mut commands: Commands, rail: Single<Entity, With<Rail>>) {

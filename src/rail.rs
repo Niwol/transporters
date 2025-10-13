@@ -39,7 +39,7 @@ struct ControlPoint {
 
 fn load_rail_materials(mut commands: Commands, mut materials: ResMut<Assets<ColorMaterial>>) {
     let rail_materials = RailMaterials {
-        basic: materials.add(ColorMaterial::from_color(palettes::basic::GRAY)),
+        basic: materials.add(ColorMaterial::from_color(palettes::basic::BLACK)),
     };
 
     commands.insert_resource(rail_materials);
