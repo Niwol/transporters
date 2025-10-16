@@ -4,12 +4,14 @@ use crate::{
     agent::{AgentPlugin, SpawnAgentEvent},
     drag_handle::DragHandlePlugin,
     platform::{PlatformPlugin, SpawnPlatform},
+    plug::PlugPlugin,
     rail::{Rail, RailPlugin, SpawnRailEvent},
 };
 
 mod agent;
 mod drag_handle;
 mod platform;
+mod plug;
 mod rail;
 
 pub struct TransporterGamePlugin;
@@ -17,7 +19,13 @@ pub struct TransporterGamePlugin;
 impl Plugin for TransporterGamePlugin {
     fn build(&self, app: &mut App) {
         app.add_plugins(DefaultPlugins);
-        app.add_plugins((RailPlugin, AgentPlugin, PlatformPlugin, DragHandlePlugin));
+        app.add_plugins((
+            RailPlugin,
+            AgentPlugin,
+            PlatformPlugin,
+            PlugPlugin,
+            DragHandlePlugin,
+        ));
 
         app.add_systems(Startup, setup);
         app.add_systems(

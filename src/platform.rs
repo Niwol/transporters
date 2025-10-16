@@ -1,6 +1,6 @@
 use bevy::{color::palettes, prelude::*};
 
-use crate::drag_handle::DragHandle;
+use crate::{drag_handle::DragHandle, plug::PlugBar};
 
 pub struct PlatformPlugin;
 impl Plugin for PlatformPlugin {
@@ -26,5 +26,6 @@ fn spawn_platform(_spawn: On<SpawnPlatform>, mut commands: Commands) {
         DragHandle {
             offset: Vec2::Y * 55.0,
         },
+        children![(PlugBar::new(5))],
     ));
 }
