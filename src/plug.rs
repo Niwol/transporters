@@ -20,6 +20,9 @@ impl PlugBar {
     }
 }
 
+#[derive(Component)]
+pub struct Plug;
+
 fn plug_bar_added(add: On<Add, PlugBar>, mut commands: Commands, plug_bars: Query<&PlugBar>) {
     let plug_bar = plug_bars.get(add.entity).unwrap();
 
@@ -52,6 +55,7 @@ fn plug_bar_added(add: On<Add, PlugBar>, mut commands: Commands, plug_bars: Quer
                         ..Default::default()
                     },
                     Transform::from_xyz(x, y, 0.0),
+                    Plug,
                 ));
             }
         });

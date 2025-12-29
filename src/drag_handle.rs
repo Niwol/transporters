@@ -7,6 +7,16 @@ impl Plugin for DragHandlePlugin {
     }
 }
 
+#[derive(EntityEvent)]
+pub struct DragStart {
+    entity: Entity,
+}
+
+#[derive(EntityEvent)]
+pub struct DragStop {
+    entity: Entity,
+}
+
 #[derive(Component)]
 pub struct DragHandle {
     pub offset: Vec2,
@@ -44,6 +54,8 @@ fn added_drag_handle(
         .observe(color_change::<Pointer<Out>>(Color::srgb(0.0, 0.5, 0.0)))
         .observe(color_change::<Pointer<Release>>(Color::srgb(0.0, 0.5, 0.0)))
         .observe(drag_parent)
+        .observe(drag_start)
+        .observe(drag_stop)
         .id();
 
     commands.entity(add.entity).add_child(inner_handle);
@@ -68,4 +80,17 @@ fn drag_parent(
         let mut transform = transforms.get_mut(child.parent()).unwrap();
         transform.translation += Vec3::new(drag.delta.x, -drag.delta.y, 0.0);
     }
+}
+
+fn drag_start(press: On<Pointer<Press>>, mut commands: Commands, children: Query<&ChildOf>) {
+    let child_of = children.get(press.entity).unwrap();
+    commands.trigger(DragStart {
+        entity: child_of.parent(),
+    });
+}
+fn drag_stop(press: On<Pointer<Release>>, mut commands: Commands, children: Query<&ChildOf>) {
+    let child_of = children.get(press.entity).unwrap();
+    commands.trigger(DragStop {
+        entity: child_of.parent(),
+    });
 }
